@@ -28,7 +28,6 @@ public  final class Group extends
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
-    int mutable_bitField0_ = 0;
     try {
       boolean done = false;
       while (!done) {
@@ -152,7 +151,8 @@ public  final class Group extends
     return result;
   }
 
-  @java.lang.Override
+  @SuppressWarnings("unchecked")
+@java.lang.Override
   public int hashCode() {
     if (memoizedHashCode != 0) {
       return memoizedHashCode;

@@ -23,7 +23,8 @@ public  final class BridgeMPPRequestStatus extends
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
   }
-  private BridgeMPPRequestStatus(
+  @SuppressWarnings("unused")
+private BridgeMPPRequestStatus(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -84,7 +85,8 @@ public  final class BridgeMPPRequestStatus extends
    * <code>optional .bridgempp.RequestStatus requestStatus = 1;</code>
    */
   public bridgempp.services.socket.protobuf.RequestStatus getRequestStatus() {
-    bridgempp.services.socket.protobuf.RequestStatus result = bridgempp.services.socket.protobuf.RequestStatus.valueOf(requestStatus_);
+    @SuppressWarnings("deprecation")
+	bridgempp.services.socket.protobuf.RequestStatus result = bridgempp.services.socket.protobuf.RequestStatus.valueOf(requestStatus_);
     return result == null ? bridgempp.services.socket.protobuf.RequestStatus.UNRECOGNIZED : result;
   }
 
@@ -134,7 +136,8 @@ public  final class BridgeMPPRequestStatus extends
     return result;
   }
 
-  @java.lang.Override
+  @SuppressWarnings("unchecked")
+@java.lang.Override
   public int hashCode() {
     if (memoizedHashCode != 0) {
       return memoizedHashCode;
@@ -375,7 +378,8 @@ public  final class BridgeMPPRequestStatus extends
      * <code>optional .bridgempp.RequestStatus requestStatus = 1;</code>
      */
     public bridgempp.services.socket.protobuf.RequestStatus getRequestStatus() {
-      bridgempp.services.socket.protobuf.RequestStatus result = bridgempp.services.socket.protobuf.RequestStatus.valueOf(requestStatus_);
+      @SuppressWarnings("deprecation")
+	bridgempp.services.socket.protobuf.RequestStatus result = bridgempp.services.socket.protobuf.RequestStatus.valueOf(requestStatus_);
       return result == null ? bridgempp.services.socket.protobuf.RequestStatus.UNRECOGNIZED : result;
     }
     /**

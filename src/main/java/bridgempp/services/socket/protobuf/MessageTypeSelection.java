@@ -98,7 +98,8 @@ public  final class MessageTypeSelection extends
       java.lang.Integer, bridgempp.services.socket.protobuf.MessageType> messageType_converter_ =
           new com.google.protobuf.Internal.ListAdapter.Converter<
               java.lang.Integer, bridgempp.services.socket.protobuf.MessageType>() {
-            public bridgempp.services.socket.protobuf.MessageType convert(java.lang.Integer from) {
+            @SuppressWarnings("deprecation")
+			public bridgempp.services.socket.protobuf.MessageType convert(java.lang.Integer from) {
               bridgempp.services.socket.protobuf.MessageType result = bridgempp.services.socket.protobuf.MessageType.valueOf(from);
               return result == null ? bridgempp.services.socket.protobuf.MessageType.UNRECOGNIZED : result;
             }
@@ -196,7 +197,8 @@ public  final class MessageTypeSelection extends
     return result;
   }
 
-  @java.lang.Override
+  @SuppressWarnings("unchecked")
+@java.lang.Override
   public int hashCode() {
     if (memoizedHashCode != 0) {
       return memoizedHashCode;
@@ -349,7 +351,6 @@ public  final class MessageTypeSelection extends
 
     public bridgempp.services.socket.protobuf.MessageTypeSelection buildPartial() {
       bridgempp.services.socket.protobuf.MessageTypeSelection result = new bridgempp.services.socket.protobuf.MessageTypeSelection(this);
-      int from_bitField0_ = bitField0_;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         messageType_ = java.util.Collections.unmodifiableList(messageType_);
         bitField0_ = (bitField0_ & ~0x00000001);

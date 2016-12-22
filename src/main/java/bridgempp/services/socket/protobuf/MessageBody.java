@@ -29,7 +29,6 @@ public  final class MessageBody extends
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
-    int mutable_bitField0_ = 0;
     try {
       boolean done = false;
       while (!done) {
@@ -90,7 +89,8 @@ public  final class MessageBody extends
   /**
    * <code>optional .bridgempp.MessageType messageType = 1;</code>
    */
-  public bridgempp.services.socket.protobuf.MessageType getMessageType() {
+  @SuppressWarnings("deprecation")
+public bridgempp.services.socket.protobuf.MessageType getMessageType() {
     bridgempp.services.socket.protobuf.MessageType result = bridgempp.services.socket.protobuf.MessageType.valueOf(messageType_);
     return result == null ? bridgempp.services.socket.protobuf.MessageType.UNRECOGNIZED : result;
   }
@@ -183,7 +183,8 @@ public  final class MessageBody extends
     return result;
   }
 
-  @java.lang.Override
+  @SuppressWarnings("unchecked")
+@java.lang.Override
   public int hashCode() {
     if (memoizedHashCode != 0) {
       return memoizedHashCode;
@@ -432,7 +433,8 @@ public  final class MessageBody extends
     /**
      * <code>optional .bridgempp.MessageType messageType = 1;</code>
      */
-    public bridgempp.services.socket.protobuf.MessageType getMessageType() {
+    @SuppressWarnings("deprecation")
+	public bridgempp.services.socket.protobuf.MessageType getMessageType() {
       bridgempp.services.socket.protobuf.MessageType result = bridgempp.services.socket.protobuf.MessageType.valueOf(messageType_);
       return result == null ? bridgempp.services.socket.protobuf.MessageType.UNRECOGNIZED : result;
     }

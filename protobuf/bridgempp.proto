@@ -35,7 +35,7 @@ message Group {
 
 message MessageBody {
 	MessageType messageType = 1;
-	string contents = 2;
+	repeated string contents = 2;
 }
 
 message MessageTypeSelection {
