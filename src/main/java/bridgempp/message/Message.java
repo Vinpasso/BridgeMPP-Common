@@ -10,12 +10,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
+import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
 import bridgempp.data.Group;
 import bridgempp.data.User;
@@ -33,21 +42,29 @@ import bridgempp.state.EventManager;
 @Entity(name = "Message")
 public class Message
 {
+	@Id()
+	@GeneratedValue(strategy = GenerationType.TABLE)
+	@Column(name = "id", nullable = false) 
+	private int id;
+	
 	@Column(name = "Sender", nullable = false)
 	private User sender;
 
 	@Column(name = "Origin", nullable = false)
 	private Endpoint origin;
 
-	@OneToMany(mappedBy = "Message")
+	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
 	private List<DeliveryGoal> destinations;
 
-	@OneToMany()
+	@ManyToMany()
+	@JoinTable(name = "MESSAGE_GROUPS", joinColumns = @JoinColumn(name = "id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "CHANNEL_NAME", referencedColumnName = "CHANNEL_NAME"))
 	private List<Group> groups;
 
-	// TODO: CONTINUE HERE
-	private HashMap<Class<? extends MessageBody>, MessageBody> messageBodies;
+	//TODO: Declare this Map properly
+	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
+	private Map<Class<? extends MessageBody>, MessageBody> messageBodies;
 
+	@Column(name = "OriginalMessageBody", nullable = false)
 	private MessageBody originalMessageBody;
 
 	public Message()
@@ -100,7 +117,7 @@ public class Message
 
 	public void addDestinationEndpoint(Endpoint endpoint)
 	{
-		destinations.add(new DeliveryGoal(endpoint));
+		destinations.add(new DeliveryGoal(this, endpoint));
 	}
 
 	private List<DeliveryGoal> getDeliveryGoals()
@@ -125,6 +142,7 @@ public class Message
 
 	public void addMessageBody(MessageBody messageBody)
 	{
+		messageBody.setMessage(this);
 		messageBodies.put(messageBody.getClass(), messageBody);
 		if (originalMessageBody == null)
 		{
@@ -228,6 +246,7 @@ public class Message
 
 	public void deliver()
 	{
+		DataManager.updateState(this);
 		getDeliveryGoals().stream().filter(e -> e.getStatus() != DeliveryStatus.DELIVERED).forEach(e -> {
 			try
 			{
@@ -237,6 +256,14 @@ public class Message
 				Log.log(Level.WARNING, "Delivery failed to endpoint " + e.toString(), ex);
 			}
 		});
+	}
+	
+	public void checkAllDelivered()
+	{
+		if(getDeliveryGoals().stream().allMatch(e -> e.getStatus() == DeliveryStatus.DELIVERED))
+		{
+			DataManager.removeState(this);
+		}
 	}
 
 	public int getLength()

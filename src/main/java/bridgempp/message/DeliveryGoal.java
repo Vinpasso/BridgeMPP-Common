@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
 
 @Entity(name = "DeliveryGoal")
@@ -26,10 +27,12 @@ public class DeliveryGoal
 	private DeliveryStatus status;
 
 	
-	public DeliveryGoal(Endpoint endpoint)
+	public DeliveryGoal(Message message, Endpoint endpoint)
 	{
 		target = endpoint;
 		status = DeliveryStatus.PENDING;
+		this.message = message;
+		DataManager.updateState(this);
 	}
 	
 	
@@ -54,6 +57,7 @@ public class DeliveryGoal
 	public void setStatus(DeliveryStatus status)
 	{
 		this.status = status;
+		DataManager.updateState(this);
 	}
 
 

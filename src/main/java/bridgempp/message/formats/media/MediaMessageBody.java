@@ -10,6 +10,7 @@ import javax.activation.MimeType;
 import org.apache.commons.io.IOUtils;
 
 import bridgempp.log.Log;
+import bridgempp.message.Message;
 import bridgempp.message.MessageBody;
 
 public abstract class MediaMessageBody extends MessageBody
