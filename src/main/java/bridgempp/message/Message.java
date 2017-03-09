@@ -5,12 +5,15 @@
  */
 package bridgempp.message;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.persistence.CascadeType;
@@ -22,12 +25,14 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
 import bridgempp.data.Group;
 import bridgempp.data.User;
+import bridgempp.data.processing.Schedule;
 import bridgempp.log.Log;
 import bridgempp.message.formats.media.MediaMessageBody;
 import bridgempp.message.formats.text.MarkupTextMessageBody;
@@ -55,12 +60,19 @@ public class Message
 
 	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
 	private List<DeliveryGoal> destinations;
+	
+	@Column(name = "Last_Delivery_Attempt", nullable = false)
+	private Date lastDeliveryAttempt;
+	
+	@Column(name = "Next_Delivery_Delay", nullable = false)
+	private long nextDeliveryDelay = 5000l;
 
 	@ManyToMany()
 	@JoinTable(name = "MESSAGE_GROUPS", joinColumns = @JoinColumn(name = "id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "CHANNEL_NAME", referencedColumnName = "CHANNEL_NAME"))
 	private List<Group> groups;
 
 	//TODO: Declare this Map properly
+	@MapKeyColumn(name = "MessageType")
 	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
 	private Map<Class<? extends MessageBody>, MessageBody> messageBodies;
 
@@ -246,6 +258,11 @@ public class Message
 
 	public void deliver()
 	{
+		if(checkAllDelivered())
+		{
+			return;
+		}
+		
 		DataManager.updateState(this);
 		getDeliveryGoals().stream().filter(e -> e.getStatus() != DeliveryStatus.DELIVERED).forEach(e -> {
 			try
@@ -256,14 +273,21 @@ public class Message
 				Log.log(Level.WARNING, "Delivery failed to endpoint " + e.toString(), ex);
 			}
 		});
+		if(!checkAllDelivered())
+		{
+			updateDeliveryTimestamps();
+			scheduleNextDelivery();
+		}
 	}
 	
-	public void checkAllDelivered()
+	public boolean checkAllDelivered()
 	{
 		if(getDeliveryGoals().stream().allMatch(e -> e.getStatus() == DeliveryStatus.DELIVERED))
 		{
 			DataManager.removeState(this);
+			return true;
 		}
+		return false;
 	}
 
 	public int getLength()
@@ -281,5 +305,17 @@ public class Message
 	{
 		return constructReply(sender, origin).addPlainTextBody(plainTextMessageBody).build();
 	}
-
+	
+	public void updateDeliveryTimestamps()
+	{
+		lastDeliveryAttempt = Date.from(Instant.now());
+		//Double the delay to the maximum of one hour delay
+		nextDeliveryDelay = Math.min(3600000l, nextDeliveryDelay * 2);
+	}
+	
+	public void scheduleNextDelivery()
+	{
+		Schedule.scheduleOnce(() -> this.deliver(), Math.max(0, (lastDeliveryAttempt.getTime() + nextDeliveryDelay) - System.currentTimeMillis()), TimeUnit.MILLISECONDS);
+	}
+	
 }

@@ -7,10 +7,14 @@
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-  <name>bridgempp-common</name>
+	<name>bridgempp-common</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.build.timestamp.format>yyyy-MM-dd_HHmm</maven.build.timestamp.format>
+		<buildNumber>${maven.build.timestamp}</buildNumber>
 	</properties>
 
 	<dependencies>
@@ -42,4 +46,12 @@
 		</dependency>
 
 	</dependencies>
+
+	<distributionManagement>
+		<repository>
+			<id>update-site</id>
+			<url>scpexe://vinpasso@vpt1.org/home/vinpasso/BridgeMPP</url>
+		</repository>
+	</distributionManagement>
+
 </project>

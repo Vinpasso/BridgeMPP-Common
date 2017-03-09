@@ -4,6 +4,7 @@ import java.time.temporal.TemporalUnit;
 import java.util.Collection;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import bridgempp.message.Message;
 import bridgempp.service.BridgeService;
 import bridgempp.state.Event;
 import bridgempp.state.EventManager;
@@ -242,5 +243,10 @@ public class DataManager
 	public static synchronized <T> Collection<T> list(Class<T> clazz)
 	{
 		return PERSISTANCE_MANAGER.getQuery(clazz);
+	}
+
+	public static Collection<Message> getAllMessages()
+	{
+		return PERSISTANCE_MANAGER.getQuery(Message.class);
 	}
 }
