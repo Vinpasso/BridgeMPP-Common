@@ -23,6 +23,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
 
+import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
 import bridgempp.log.Log;
 import bridgempp.message.DeliveryGoal;
@@ -132,6 +133,7 @@ public abstract class BridgeService {
 	public void setStatus(ServiceStatus status)
 	{
 		this.status = status;
+		DataManager.updateState(this);
 	}
 	
 }

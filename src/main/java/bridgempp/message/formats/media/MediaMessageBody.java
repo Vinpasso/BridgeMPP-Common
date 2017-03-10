@@ -6,13 +6,16 @@ import java.util.Base64;
 import java.util.logging.Level;
 
 import javax.activation.MimeType;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 
 import org.apache.commons.io.IOUtils;
 
 import bridgempp.log.Log;
-import bridgempp.message.Message;
 import bridgempp.message.MessageBody;
 
+@Entity(name = "MediaMessageBody")
+@DiscriminatorValue(value = "MediaMessageBody")
 public abstract class MediaMessageBody extends MessageBody
 {
 	public abstract String getIdentifier();

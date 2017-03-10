@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -25,8 +26,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Version;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
@@ -44,6 +49,7 @@ import bridgempp.state.EventManager;
  *
  * @author Vincent Bode
  */
+@SuppressWarnings("unused")
 @Entity(name = "Message")
 public class Message
 {
@@ -52,13 +58,19 @@ public class Message
 	@Column(name = "id", nullable = false) 
 	private int id;
 	
-	@Column(name = "Sender", nullable = false)
+	@Version
+	@Column(name = "VERSION", nullable = false)
+	private long version;
+	
+	@ManyToOne(optional=false, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+	@JoinColumn(name = "sender_id", referencedColumnName = "IDENTIFIER")
 	private User sender;
 
-	@Column(name = "Origin", nullable = false)
+	@ManyToOne(optional=false, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+	@JoinColumn(name = "origin_id", referencedColumnName = "IDENTIFIER")
 	private Endpoint origin;
 
-	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
 	private List<DeliveryGoal> destinations;
 	
 	@Column(name = "Last_Delivery_Attempt", nullable = false)
@@ -72,12 +84,12 @@ public class Message
 	private List<Group> groups;
 
 	//TODO: Declare this Map properly
-	@MapKeyColumn(name = "MessageType")
-	@OneToMany(mappedBy = "Message", cascade = CascadeType.ALL)
-	private Map<Class<? extends MessageBody>, MessageBody> messageBodies;
+	@MapKeyColumn(name = "MessageType", length = 4096)
+	@OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
+	private Map<String, MessageBody> messageBodies;
 
-	@Column(name = "OriginalMessageBody", nullable = false)
-	private MessageBody originalMessageBody;
+	@Column(name = "originalMessageBody", nullable = false)
+	private String originalMessageBody;
 
 	public Message()
 	{
@@ -91,6 +103,7 @@ public class Message
 		this.destinations = new ArrayList<>();
 		this.groups = new ArrayList<>();
 		this.messageBodies = new HashMap<>();
+		this.lastDeliveryAttempt = Date.from(Instant.EPOCH);
 	}
 
 	/**
@@ -139,7 +152,7 @@ public class Message
 
 	public String getMetadataInfo()
 	{
-		String messageFormat = (messageBodies.isEmpty() ? "Empty" : originalMessageBody.getFormatName()) + ": ";
+		String messageFormat = (messageBodies.isEmpty() ? "Empty" : getOriginalMessageBody().getFormatName()) + ": ";
 		String sender = (getSender() != null) ? getSender().toString() : "Unknown";
 		String origin = (getOrigin() != null) ? getOrigin().toString() : "Unknown";
 		String target = getDeliveryGoals().stream().filter(e -> e.getStatus().equals(DeliveryStatus.DELIVERED)).count() + "/" + getDeliveryGoals().size();
@@ -155,10 +168,10 @@ public class Message
 	public void addMessageBody(MessageBody messageBody)
 	{
 		messageBody.setMessage(this);
-		messageBodies.put(messageBody.getClass(), messageBody);
+		messageBodies.put(messageBody.getClass().getName(), messageBody);
 		if (originalMessageBody == null)
 		{
-			originalMessageBody = messageBody;
+			originalMessageBody = messageBody.getClass().getName();
 		}
 	}
 
@@ -171,10 +184,10 @@ public class Message
 			return (T) messageBody;
 		}
 
-		T convertedMessageBody = MessageBodyRegister.convert(originalMessageBody, messageBodyClass);
+		T convertedMessageBody = MessageBodyRegister.convert(getOriginalMessageBody(), messageBodyClass);
 		if (convertedMessageBody != null)
 		{
-			messageBodies.put(messageBodyClass, convertedMessageBody);
+			addMessageBody(convertedMessageBody);
 			return convertedMessageBody;
 		}
 		return null;
@@ -195,12 +208,12 @@ public class Message
 	 */
 	public boolean hasMessageBody(Class<? extends MessageBody> bodyClass)
 	{
-		return messageBodies.containsKey(bodyClass) || MessageBodyRegister.canConvert(originalMessageBody, bodyClass);
+		return messageBodies.containsKey(bodyClass) || MessageBodyRegister.canConvert(getOriginalMessageBody(), bodyClass);
 	}
 
 	private MessageBody getOriginalMessageBody()
 	{
-		return originalMessageBody;
+		return messageBodies.get(originalMessageBody);
 	}
 
 	public boolean hasOriginalMessageBody(Class<? extends MessageBody> bodyClass)
@@ -210,17 +223,30 @@ public class Message
 
 	public boolean isPlainTextMessage()
 	{
-		return originalMessageBody instanceof PlainTextMessageBody;
+		return PlainTextMessageBody.class.isAssignableFrom(getOriginalMessageBodyClass());
 	}
 
 	public boolean isMarkupTextMessage()
 	{
-		return originalMessageBody instanceof MarkupTextMessageBody;
+		return MarkupTextMessageBody.class.isAssignableFrom(getOriginalMessageBodyClass());
 	}
 
 	public boolean isMediaMessage()
 	{
-		return originalMessageBody instanceof MediaMessageBody;
+		return MediaMessageBody.class.isAssignableFrom(getOriginalMessageBodyClass());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Class<? extends MessageBody> getOriginalMessageBodyClass()
+	{
+		try
+		{
+			return (Class<? extends MessageBody>) Class.forName(originalMessageBody);
+		} catch (ClassNotFoundException e)
+		{
+			Log.log(Level.SEVERE, "Original message body class not found");
+			return MessageBody.class;
+		}
 	}
 
 	public boolean isTextMessage()
@@ -255,15 +281,28 @@ public class Message
 	{
 		return messageBodies.values();
 	}
+	
+	public boolean validate()
+	{
+		return sender != null && origin != null && !getOriginalMessageBodyClass().equals(MessageBody.class);
+	}
 
 	public void deliver()
 	{
-		if(checkAllDelivered())
+		Log.log(Level.INFO, "Delivering Message: " + toString());
+		if(!validate())
 		{
+			Log.log(Level.WARNING, "Failed to validate Message");
+			if(DataManager.hasState(this))
+			{
+				Log.log(Level.WARNING, "Removing persisted message that failed to validate");
+				DataManager.removeState(this);
+			}
 			return;
 		}
-		
-		DataManager.updateState(this);
+		origin.addPendingMessage(this);
+		sender.addPendingMessage(this);
+		DataManager.updateState(Stream.concat(Stream.concat(Arrays.stream(new Object[] {origin, sender, this }), getDeliveryGoals().stream()), getMessageBodies().stream()).toArray());
 		getDeliveryGoals().stream().filter(e -> e.getStatus() != DeliveryStatus.DELIVERED).forEach(e -> {
 			try
 			{
@@ -276,8 +315,10 @@ public class Message
 		if(!checkAllDelivered())
 		{
 			updateDeliveryTimestamps();
+			Log.log(Level.INFO, "Not all delivery goals reached for message: " + toString() + ". Retry in " + nextDeliveryDelay + "ms");
 			scheduleNextDelivery();
 		}
+		Log.log(Level.INFO, "Deliver cycle completed: " + toString());
 	}
 	
 	public boolean checkAllDelivered()
@@ -285,6 +326,7 @@ public class Message
 		if(getDeliveryGoals().stream().allMatch(e -> e.getStatus() == DeliveryStatus.DELIVERED))
 		{
 			DataManager.removeState(this);
+			Log.log(Level.INFO, "Delivery goals reached, deleted message: " + toString());
 			return true;
 		}
 		return false;
@@ -311,6 +353,7 @@ public class Message
 		lastDeliveryAttempt = Date.from(Instant.now());
 		//Double the delay to the maximum of one hour delay
 		nextDeliveryDelay = Math.min(3600000l, nextDeliveryDelay * 2);
+		DataManager.updateState(this);
 	}
 	
 	public void scheduleNextDelivery()

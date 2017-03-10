@@ -4,12 +4,24 @@ import java.io.IOException;
 import java.net.URL;
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 
+@Entity(name = "ImageMessageBody")
+@DiscriminatorValue(value = "ImageMessageBody")
 public class ImageMessageBody extends MediaMessageBody
 {
+	@Column(name = "imageIdentifier", nullable = false, length = 4096)
 	private String identifier;
+
+	@Column(name = "mimeType", nullable = false)
 	private MimeType mimeType;
+	
+	@Column(name = "url", nullable = false)
 	private URL url;
+	
+	@Column(name = "caption", nullable = true, length = 4096)
 	private String caption;
 	
 	
@@ -26,6 +38,12 @@ public class ImageMessageBody extends MediaMessageBody
 	public ImageMessageBody(String identifier, MimeType mimeType, URL url)
 	{
 		this(identifier, mimeType, url, "");
+	}
+	
+	//JPA
+	@SuppressWarnings("unused")
+	private ImageMessageBody()
+	{
 	}
 
 

@@ -21,6 +21,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PreRemove;
 import javax.persistence.Version;
 
@@ -58,6 +59,9 @@ public class Endpoint {
     @ManyToMany(mappedBy = "endpoints")
     private Collection<Group> groups;
     
+    @OneToMany(mappedBy="origin")
+    private Collection<Message> pendingMessages;
+    
 	@Version
     @Column(name = "VERSION", nullable = false)
     private long version;
@@ -69,6 +73,7 @@ public class Endpoint {
     {
     	users = new ArrayList<>();
     	groups = new ArrayList<>();
+    	pendingMessages = new ArrayList<>();
     }
     
     //Create a new Endpoint
@@ -151,8 +156,8 @@ public class Endpoint {
 		if(!users.contains(user))
 		{
 			users.add(user);
-			user.addEndpointNonBidirectional(this);
 		}
+		user.addEndpointNonBidirectional(this);
 	}
 	
 	/**
@@ -196,5 +201,10 @@ public class Endpoint {
 	 */
 	protected void removeGroupNonBidirectional(Group group) {
 		groups.remove(group);
+	}
+
+	public void addPendingMessage(Message message)
+	{
+		pendingMessages.add(message);
 	}
 }

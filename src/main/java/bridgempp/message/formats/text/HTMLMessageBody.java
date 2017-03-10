@@ -1,15 +1,31 @@
 package bridgempp.message.formats.text;
 
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import org.jsoup.Jsoup;
 import org.jsoup.examples.HtmlToPlainText;
 import org.jsoup.nodes.Document;
 
-
+@Entity(name = "HTMLMessageBody")
+@DiscriminatorValue(value = "HTMLMessageBody")
 public class HTMLMessageBody extends MarkupTextMessageBody
 {
-	protected Document htmlDocument;
+	protected transient Document htmlDocument;
 
+	@Column(name = "htmlCode", nullable = false, length = 21844)
+	private String htmlText = "";
+	
 	public HTMLMessageBody(String htmlText)
+	{
+		super();
+		htmlDocument = Jsoup.parse(htmlText);
+		this.htmlText = htmlText;
+	}
+	
+	//JPA
+	protected HTMLMessageBody()
 	{
 		super();
 		htmlDocument = Jsoup.parse(htmlText);

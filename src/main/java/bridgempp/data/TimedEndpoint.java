@@ -26,6 +26,12 @@ public class TimedEndpoint extends Endpoint {
 		expireDate = Date.from(creationDate.toInstant().plus(expire, timeUnit));
 	}
 	
+	//JPA
+	@SuppressWarnings("unused")
+	private TimedEndpoint()
+	{
+	}
+	
 	public boolean checkExpired() {
 		return Date.from(Instant.now()).after(expireDate);
 	}

@@ -249,4 +249,9 @@ public class DataManager
 	{
 		return PERSISTANCE_MANAGER.getQuery(Message.class);
 	}
+
+	public static boolean hasState(Object... object)
+	{
+		return PERSISTANCE_MANAGER.hasState(object);
+	}
 }

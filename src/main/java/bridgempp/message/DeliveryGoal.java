@@ -5,6 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Version;
 
 import bridgempp.data.DataManager;
 import bridgempp.data.Endpoint;
@@ -17,14 +20,21 @@ public class DeliveryGoal
 	@Column(name = "Identifier", nullable = false)
 	private int id;
 	
-	@Column(name = "Target", nullable = false)
+	@ManyToOne(optional=false)
+	@JoinColumn(name = "endpoint_id", referencedColumnName = "IDENTIFIER")
 	private Endpoint target;
 
-	@Column(name = "Message", nullable = false)
+	@ManyToOne(optional=false)
+	@JoinColumn(name = "message_id", referencedColumnName = "id")
 	private Message message;
 	
 	@Column(name = "DeliveryStatus", nullable = false)
 	private DeliveryStatus status;
+	
+	@Version
+	@Column(name = "VERSION", nullable = false)
+	private long version;
+
 
 	
 	public DeliveryGoal(Message message, Endpoint endpoint)
@@ -32,7 +42,13 @@ public class DeliveryGoal
 		target = endpoint;
 		status = DeliveryStatus.PENDING;
 		this.message = message;
-		DataManager.updateState(this);
+	}
+	
+	// JPA
+	@SuppressWarnings("unused")
+	private DeliveryGoal()
+	{
+		
 	}
 	
 	

@@ -2,11 +2,16 @@ package bridgempp.message.formats.text;
 
 import java.util.Arrays;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import org.jivesoftware.smackx.xhtmlim.XHTMLText;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeVisitor;
 
+@Entity(name = "XHTMLXMPPMessageBody")
+@DiscriminatorValue(value = "XHTMLXMPPMessageBody")
 public class XHTMLXMPPMessageBody extends XHTMLMessageBody
 {
 
@@ -52,6 +57,12 @@ public class XHTMLXMPPMessageBody extends XHTMLMessageBody
 			{
 			}
 		});
+	}
+	
+	//JPA
+	@SuppressWarnings("unused")
+	private XHTMLXMPPMessageBody()
+	{
 	}
 	
 	@Override

@@ -11,6 +11,8 @@ public abstract class PersistanceManager
 	public abstract void shutdown();
 	public abstract <T> Collection<T> getQuery(Class<T> className);
 	public abstract <T> T getFromPrimaryKey(Class<T> className, Object primaryKey);
+	public abstract boolean hasState(Object... objects);
+	
 	
 	public static PersistanceManager getPersistanceManager()
 	{
@@ -29,6 +31,5 @@ public abstract class PersistanceManager
 		}
 		instance = newInstance;
 	}
-	
 
 }

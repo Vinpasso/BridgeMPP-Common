@@ -17,9 +17,14 @@ public class MessageBuilder
 	}
 	
 	
+	/**
+	 * This WILL prepend Author
+	 * @param body
+	 * @return builder
+	 */
 	public MessageBuilder addPlainTextBody(String body)
 	{
-		message.addMessageBody(new PlainTextMessageBody(body));
+		message.addMessageBody(new PlainTextMessageBody(((message.getSender()==null)?"BridgeMPP":message.getSender().toString()) + ": " + body));
 		return this;
 	}
 	

@@ -1,7 +1,12 @@
 package bridgempp.message.formats.text;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 
+@Entity(name = "XHTMLMessageBody")
+@DiscriminatorValue(value = "XHTMLMessageBody")
 public class XHTMLMessageBody extends HTMLMessageBody
 {
 
@@ -9,6 +14,11 @@ public class XHTMLMessageBody extends HTMLMessageBody
 	{
 		super(htmlText);
 		htmlDocument.outputSettings().syntax(Syntax.xml);
+	}
+
+	//JPA
+	protected XHTMLMessageBody()
+	{
 	}
 
 	@Override
